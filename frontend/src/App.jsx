@@ -7,12 +7,16 @@ import ProductModal from './components/ProductModal'
 
 const CATEGORIES = ['all', 'laptops', 'tablets', 'audio', 'accessories']
 
+// In dev, VITE_API_BASE_URL is unset → relative URL → Vite proxy → localhost:8000
+// In production, set VITE_API_BASE_URL=https://shopai-1-3nev.onrender.com in your host's env vars
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
 export default function App() {
     // ── State ──────────────────────────────────────────────────
-    const [allProducts, setAllProducts] = useState([])      // full catalog from API
-    const [displayProducts, setDisplayProducts] = useState([])    // what's shown in the grid
-    const [aiSummary, setAiSummary] = useState('')       // LLM summary text
-    const [aiProductIds, setAiProductIds] = useState(null)     // null = no AI search yet
+    const [allProducts, setAllProducts] = useState([])
+    const [displayProducts, setDisplayProducts] = useState([])
+    const [aiSummary, setAiSummary] = useState('')
+    const [aiProductIds, setAiProductIds] = useState(null)
 
     const [query, setQuery] = useState('')
     const [activeCategory, setActiveCategory] = useState('all')
@@ -23,14 +27,14 @@ export default function App() {
     const [catalogError, setCatalogError] = useState(null)
     const [askError, setAskError] = useState(null)
 
-    const [selectedProduct, setSelectedProduct] = useState(null) // modal
+    const [selectedProduct, setSelectedProduct] = useState(null)
 
 
     // ── Load full product catalog on mount ────────────────────
     useEffect(() => {
         async function fetchProducts() {
             try {
-                const res = await fetch('/api/products')
+                const res = await fetch(`${API_BASE}/api/products`)
                 if (!res.ok) throw new Error(`Server error: ${res.status}`)
                 const data = await res.json()
                 setAllProducts(data.products)
@@ -47,7 +51,7 @@ export default function App() {
 
     // ── Re-filter catalog when category changes (no AI mode) ──
     useEffect(() => {
-        if (aiProductIds !== null) return  // AI search is active; don't override
+        if (aiProductIds !== null) return
 
         if (activeCategory === 'all') {
             setDisplayProducts(allProducts)
@@ -60,7 +64,7 @@ export default function App() {
     // ── Category filter handler ───────────────────────────────
     function handleCategoryChange(cat) {
         setActiveCategory(cat)
-        setAiProductIds(null)  // exit AI search mode
+        setAiProductIds(null)
         setAiSummary('')
         setAskError(null)
         setQuery('')
@@ -76,7 +80,7 @@ export default function App() {
         setAiProductIds(null)
 
         try {
-            const res = await fetch('/api/ask', {
+            const res = await fetch(`${API_BASE}/api/ask`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: query.trim() }),
@@ -90,7 +94,6 @@ export default function App() {
             setAiProductIds(data.productIds)
             setAiSummary(data.summary)
 
-            // Show AI-matched products (or all if none matched)
             if (data.products && data.products.length > 0) {
                 setDisplayProducts(data.products)
             } else {
@@ -203,7 +206,6 @@ export default function App() {
                         ))}
                     </div>
 
-                    {/* Show "back to browse" button after AI search */}
                     {aiProductIds !== null && (
                         <div style={{ textAlign: 'center', marginTop: '32px' }}>
                             <button

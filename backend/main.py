@@ -2,10 +2,11 @@
 FastAPI backend for the Product Discovery app.
 Endpoints:
   GET  /api/products   - list or filter products
-  POST /api/ask        - natural-language search powered by OpenAI LLM
+  POST /api/ask        - natural-language search powered by Groq LLM
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -40,10 +41,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Allow all origins so any deployed frontend (Vercel, Netlify, etc.) can connect
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
